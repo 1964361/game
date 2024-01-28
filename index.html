@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Shooter Game</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script>
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const spaceshipGeometry = new THREE.BoxGeometry(2, 1, 1);
+      const spaceshipMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+      });
+      const spaceship = new THREE.Mesh(spaceshipGeometry, spaceshipMaterial);
+      spaceship.position.y = -5;
+      scene.add(spaceship);
+
+      const bullets = [];
+      const enemies = [];
+      let score = 0;
+
+      const scoreElement = document.createElement("div");
+      scoreElement.style.position = "absolute";
+      scoreElement.style.top = "10px";
+      scoreElement.style.left = "10px";
+      scoreElement.style.color = "#ffffff";
+      document.body.appendChild(scoreElement);
+
+      const animate = function () {
+        requestAnimationFrame(animate);
+
+        updateSpaceship();
+        updateBullets();
+        updateEnemies();
+
+        renderer.render(scene, camera);
+      };
+
+      const updateSpaceship = function () {
+        if (isKeyPressed("ArrowLeft") && spaceship.position.x > -10) {
+          spaceship.position.x -= 0.2;
+        } else if (isKeyPressed("ArrowRight") && spaceship.position.x < 10) {
+          spaceship.position.x += 0.2;
+        }
+
+        if (isKeyPressed("Space") && bullets.length < 5) {
+          shootBullet();
+        }
+      };
+
+      const updateBullets = function () {
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const bullet = bullets[i];
+          bullet.position.y += 0.5;
+
+          if (bullet.position.y > 10) {
+            scene.remove(bullet);
+            bullets.splice(i, 1);
+          }
+
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            const enemy = enemies[j];
+            if (bullet.position.distanceTo(enemy.position) < 1.5) {
+              scene.remove(bullet);
+              scene.remove(enemy);
+              bullets.splice(i, 1);
+              enemies.splice(j, 1);
+              score += 10;
+            }
+          }
+        }
+      };
+
+      const updateEnemies = function () {
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          const enemy = enemies[i];
+          enemy.position.y -= 0.05;
+
+          if (enemy.position.y < -5) {
+            scene.remove(enemy);
+            enemies.splice(i, 1);
+            spawnEnemy();
+          }
+
+          if (spaceship.position.distanceTo(enemy.position) < 1.5) {
+            // Spaceship hit by enemy, end the game
+            alert(`Game Over! Your Score: ${score}`);
+            resetGame();
+          }
+        }
+      };
+
+      const shootBullet = function () {
+        const bulletGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.5);
+        const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+        bullet.position.copy(spaceship.position);
+        scene.add(bullet);
+        bullets.push(bullet);
+      };
+
+      const spawnEnemy = function () {
+        const enemyGeometry = new THREE.BoxGeometry(2, 1, 1);
+        const enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+        enemy.position.set((Math.random() - 0.5) * 18, 5, 0);
+        scene.add(enemy);
+        enemies.push(enemy);
+      };
+
+      const resetGame = function () {
+        score = 0;
+
+        bullets.forEach((bullet) => scene.remove(bullet));
+        bullets.length = 0;
+
+        enemies.forEach((enemy) => scene.remove(enemy));
+        enemies.length = 0;
+
+        spaceship.position.set(0, -5, 0);
+
+        spawnEnemy();
+      };
+
+      const isKeyPressed = function (key) {
+        return keyStates[key] === true;
+      };
+
+      const keyStates = {};
+
+      document.addEventListener("keydown", (event) => {
+        keyStates[event.key] = true;
+      });
+
+      document.addEventListener("keyup", (event) => {
+        keyStates[event.key] = false;
+      });
+
+      window.addEventListener("resize", function () {
+        const newWidth = window.innerWidth;
+        const newHeight = window.innerHeight;
+
+        camera.aspect = newWidth / newHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(newWidth, newHeight);
+      });
+
+      animate();
+    </script>
+  </body>
+</html>
