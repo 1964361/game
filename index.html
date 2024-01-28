@@ -1,72 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fun Car Game</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-
-    canvas {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-
-  <script>
-    // Get the canvas and context
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // Car properties
-    const car = {
-      x: 50,
-      y: canvas.height / 2 - 20,
-      width: 40,
-      height: 20,
-      speed: 5,
-    };
-
-    // Keyboard controls
-    const keys = {};
-
-    window.addEventListener('keydown', (e) => {
-      keys[e.key] = true;
-    });
-
-    window.addEventListener('keyup', (e) => {
-      keys[e.key] = false;
-    });
-
-    // Game loop
-    function gameLoop() {
-      // Update
-      if (keys['ArrowUp'] && car.y > 0) {
-        car.y -= car.speed;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Game</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
       }
 
-      if (keys['ArrowDown'] && car.y < canvas.height - car.height) {
-        car.y += car.speed;
+      canvas {
+        display: block;
       }
 
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      .road {
+        position: absolute;
+        width: 10px;
+        height: 100%;
+        background-color: gray;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <div class="road"></div>
 
-      // Draw the car
-      ctx.fillStyle = 'blue';
-      ctx.fillRect(car.x, car.y, car.width, car.height);
+    <script>
+      // Get the canvas and context
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
 
-      // Call the next frame
-      requestAnimationFrame(gameLoop);
-    }
+      // Load car image
+      const carImage = new Image();
+      carImage.src = "car.png"; // Make sure to replace 'car.png' with the actual path to your car image
 
-    // Start the game loop
-    gameLoop();
-  </script>
-</body>
+      // Car properties
+      const car = {
+        x: canvas.width / 2 - 20,
+        y: canvas.height - 100,
+        width: 40,
+        height: 80,
+        speed: 5,
+      };
+
+      // Obstacle properties
+      const obstacle = {
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        width: 20,
+        height: 20,
+        speed: 5,
+      };
+
+      // Road properties
+      const roadWidth = 10;
+
+      // Score
+      let score = 0;
+
+      // Keyboard controls
+      const keys = {};
+
+      window.addEventListener("keydown", (e) => {
+        keys[e.key] = true;
+      });
+
+      window.addEventListener("keyup", (e) => {
+        keys[e.key] = false;
+      });
+
+      // Game loop
+      function gameLoop() {
+        // Update
+        if (keys["ArrowLeft"] && car.x > roadWidth) {
+          car.x -= car.speed;
+        }
+
+        if (
+          keys["ArrowRight"] &&
+          car.x < canvas.width - car.width - roadWidth
+        ) {
+          car.x += car.speed;
+        }
+
+        // Move obstacle
+        obstacle.y += obstacle.speed;
+
+        // Check for collision with the car
+        if (
+          car.x < obstacle.x + obstacle.width &&
+          car.x + car.width > obstacle.x &&
+          car.y < obstacle.y + obstacle.height &&
+          car.y + car.height > obstacle.y
+        ) {
+          // Collision detected, reset the game
+          alert("Game Over! Your Score: " + score);
+          resetGame();
+        }
+
+        // Check if the obstacle has passed the car
+        if (obstacle.y > canvas.height) {
+          // Increase the score and reset the obstacle position
+          score++;
+          obstacle.y = -20;
+          obstacle.x = Math.random() * (canvas.width - 20);
+        }
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the road
+        ctx.fillStyle = "gray";
+        ctx.fillRect(
+          canvas.width / 2 - roadWidth / 2,
+          0,
+          roadWidth,
+          canvas.height
+        );
+
+        // Draw the car
+        ctx.drawImage(carImage, car.x, car.y, car.width, car.height);
+
+        // Draw the obstacle
+        ctx.fillStyle = "red";
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+
+        // Draw the score
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("Score: " + score, 10, 30);
+
+        // Call the next frame
+        requestAnimationFrame(gameLoop);
+      }
+
+      // Reset the game
+      function resetGame() {
+        car.x = canvas.width / 2 - 20;
+        car.y = canvas.height - 100;
+        score = 0;
+        obstacle.y = -20;
+        obstacle.x = Math.random() * (canvas.width - 20);
+      }
+
+      // Start the game loop
+      gameLoop();
+    </script>
+  </body>
 </html>
