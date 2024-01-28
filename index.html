@@ -3,105 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fruit Slicer</title>
+  <title>Fun Car Game</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <script src="https://threejs.org/build/three.js"></script>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
   <script>
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    // Get the canvas and context
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-    const fruits = [];
-    let score = 0;
-    let penalty = 0;
-
-    const scoreElement = document.createElement('div');
-    scoreElement.style.position = 'absolute';
-    scoreElement.style.top = '10px';
-    scoreElement.style.left = '10px';
-    scoreElement.style.color = '#ffffff';
-    document.body.appendChild(scoreElement);
-
-    const animate = function () {
-      requestAnimationFrame(animate);
-
-      updateFruits();
-      updateScore();
-
-      renderer.render(scene, camera);
+    // Car properties
+    const car = {
+      x: 50,
+      y: canvas.height / 2 - 20,
+      width: 40,
+      height: 20,
+      speed: 5,
     };
 
-    const updateFruits = function () {
-      for (let i = fruits.length - 1; i >= 0; i--) {
-        const fruit = fruits[i];
-        fruit.position.y -= 0.1;
+    // Keyboard controls
+    const keys = {};
 
-        if (fruit.position.y < -5) {
-          // Fruit missed
-          scene.remove(fruit);
-          fruits.splice(i, 1);
-          penalty++;
-        }
-      }
-    };
-
-    const updateScore = function () {
-      scoreElement.innerText = `Score: ${score} | Penalty: ${penalty}`;
-    };
-
-    const spawnFruit = function () {
-      const fruitGeometry = new THREE.SphereGeometry(1, 32, 32);
-      const fruitMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
-      const fruit = new THREE.Mesh(fruitGeometry, fruitMaterial);
-      fruit.position.set((Math.random() - 0.5) * 18, 5, 0);
-      scene.add(fruit);
-      fruits.push(fruit);
-    };
-
-    const onMouseMove = function (event) {
-      const mouse = new THREE.Vector2();
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
-
-      for (let i = fruits.length - 1; i >= 0; i--) {
-        const fruit = fruits[i];
-        const intersects = raycaster.intersectObject(fruit);
-
-        if (intersects.length > 0) {
-          // Fruit sliced
-          scene.remove(fruit);
-          fruits.splice(i, 1);
-          score += 10;
-        }
-      }
-    };
-
-    document.addEventListener('mousemove', onMouseMove, false);
-    document.addEventListener('click', onMouseMove, false);
-
-    window.addEventListener('resize', function () {
-      const newWidth = window.innerWidth;
-      const newHeight = window.innerHeight;
-
-      camera.aspect = newWidth / newHeight;
-      camera.updateProjectionMatrix();
-
-      renderer.setSize(newWidth, newHeight);
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
     });
 
-    setInterval(spawnFruit, 1000);
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
 
-    animate();
+    // Game loop
+    function gameLoop() {
+      // Update
+      if (keys['ArrowUp'] && car.y > 0) {
+        car.y -= car.speed;
+      }
+
+      if (keys['ArrowDown'] && car.y < canvas.height - car.height) {
+        car.y += car.speed;
+      }
+
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the car
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(car.x, car.y, car.width, car.height);
+
+      // Call the next frame
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Start the game loop
+    gameLoop();
   </script>
 </body>
 </html>
